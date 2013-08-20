@@ -9,7 +9,7 @@
 // @match     http://www.facebook.com/*
 // @run-at         document-end
 // @require        http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.9.1.min.js
-// @version     1.1
+// @version     1.0.2
 // ==/UserScript==
 
 
@@ -31,7 +31,6 @@
       }
       request = indexedDB.open('newshelper', '6');
       request.onsuccess = function(event){
-        var opened_db;
         opened_db = request.result;
         return cb(opened_db);
       };
@@ -92,7 +91,7 @@
         var transaction, objectStore, index, get_request;
         transaction = opened_db.transaction('read_news', 'readonly');
         objectStore = transaction.objectStore('read_news');
-        index = objectStore.index("link");
+        index = objectStore.index('link');
         get_request = index.get(report.news_link);
         return get_request.onsuccess = function(){
           if (!get_request.result) {
@@ -101,22 +100,16 @@
           if (parseInt(get_request.result.deleted_at, 10)) {
             return;
           }
-          return chrome.extension.sendRequest({
-            method: "add_notification",
-            title: "新聞小幫手提醒您",
-            body: "您於" + get_time_diff(get_request.result.last_seen_at) + " 看的新聞「" + get_request.result.title + "」 被人回報有錯誤：" + report.report_title,
-            link: report.report_link
-          }, function(response){});
         };
       });
     };
     get_recent_report = function(cb){
       return get_newshelper_db(function(opened_db){
         var transaction, objectStore, index, request;
-        transaction = opened_db.transaction("report", "readonly");
-        objectStore = transaction.objectStore("report");
-        index = objectStore.index("updated_at");
-        request = index.openCursor(null, "prev");
+        transaction = opened_db.transaction('report', 'readonly');
+        objectStore = transaction.objectStore('report');
+        index = objectStore.index('updated_at');
+        request = index.openCursor(null, 'prev');
         return request.onsuccess = function(){
           if (request.result) {
             cb(request.result.value);
@@ -138,8 +131,8 @@
             onload: function(xhr){
               var ret, transaction, objectStore, i;
               ret = JSON.parse(xhr.responseText);
-              transaction = opened_db.transaction("report", "readwrite");
-              objectStore = transaction.objectStore("report");
+              transaction = opened_db.transaction('report', 'readwrite');
+              objectStore = transaction.objectStore('report');
               if (ret.data) {
                 i = 0;
                 while (i < ret.data.length) {
@@ -160,8 +153,8 @@
       }
       return get_newshelper_db(function(opened_db){
         var transaction, objectStore, request, message;
-        transaction = opened_db.transaction("read_news", "readwrite");
-        objectStore = transaction.objectStore("read_news");
+        transaction = opened_db.transaction('read_news', 'readwrite');
+        objectStore = transaction.objectStore('read_news');
         try {
           request = objectStore.add({
             title: title,
@@ -174,9 +167,9 @@
         }
         return request.onerror = function(){
           var transaction, objectStore, index, get_request;
-          transaction = opened_db.transaction("read_news", "readwrite");
-          objectStore = transaction.objectStore("read_news");
-          index = objectStore.index("link");
+          transaction = opened_db.transaction('read_news', 'readwrite');
+          objectStore = transaction.objectStore('read_news');
+          index = objectStore.index('link');
           get_request = index.get(link);
           return get_request.onsuccess = function(){
             var put_request;
@@ -195,9 +188,9 @@
       }
       return get_newshelper_db(function(opened_db){
         var transaction, objectStore, index, get_request;
-        transaction = opened_db.transaction("report", "readonly");
-        objectStore = transaction.objectStore("report");
-        index = objectStore.index("news_link");
+        transaction = opened_db.transaction('report', 'readonly');
+        objectStore = transaction.objectStore('report');
+        index = objectStore.index('news_link');
         get_request = index.get(url);
         return get_request.onsuccess = function(){
           if (get_request.result && !parseInt(get_request.result.deleted_at, 10)) {
@@ -275,14 +268,12 @@
             return censorFacebookNode(shareUnit, titleText, linkHref);
           }
         });
-        return $(baseNode).find("._6kv").each(function(idx, userContent){
+        return $(baseNode).find('._6kv').not('newshelper-checked').each(function(idx, userContent){
           var titleText, linkHref;
           userContent = $(userContent);
-          if (!userContent.hasClass("newshelper-checked")) {
-            titleText = userContent.find(".mbs").text();
-            linkHref = userContent.find("a").attr("href");
-            return censorFacebookNode(userContent, titleText, linkHref);
-          }
+          titleText = userContent.find('.mbs').text();
+          linkHref = userContent.find('a').attr('href');
+          return censorFacebookNode(userContent, titleText, linkHref);
         });
       }
     };
@@ -290,7 +281,7 @@
       var MutationObserver, mutationObserverConfig, throttle, mutationObserver;
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       mutationObserverConfig = {
-        target: document.getElementsByTagName("body")[0],
+        target: document.getElementsByTagName('body')[0],
         config: {
           attributes: true,
           childList: true,
@@ -298,15 +289,14 @@
         }
       };
       throttle = function(){
-        timer_;
+        var timer_;
         return function(fn, wait){
-          var timer_;
           if (timer_) {
             clearTimeout(timer_);
           }
           return timer_ = setTimeout(fn, wait);
         };
-      };
+      }();
       mutationObserver = new MutationObserver(function(mutations){
         return throttle(function(){
           return censorFacebook(document.body);

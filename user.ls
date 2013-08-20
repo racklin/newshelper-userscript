@@ -59,7 +59,7 @@ let $ = jQuery
       return
     request = indexedDB.open(\newshelper, \6)
     request.onsuccess = (event) ->
-      opened_db = request.result
+      opened_db := request.result
       cb opened_db
 
     request.onerror = (event) ->
@@ -92,30 +92,31 @@ let $ = jQuery
 
   check_recent_seen = (report) ->
     get_newshelper_db (opened_db) ->
-      transaction = opened_db.transaction(\read_news, \readonly)
-      objectStore = transaction.objectStore(\read_news)
-      index = objectStore.index("link")
-      get_request = index.get(report.news_link)
+      transaction = opened_db.transaction \read_news, \readonly
+      objectStore = transaction.objectStore \read_news
+      index = objectStore.index \link
+      get_request = index.get report.news_link
       get_request.onsuccess = ->
         return  unless get_request.result
 
         # 如果已經被刪除了就跳過
-        return  if parseInt(get_request.result.deleted_at, 10)
+        return if parseInt(get_request.result.deleted_at, 10)
+        /*
         chrome.extension.sendRequest {
-          method: "add_notification"
-          title: "新聞小幫手提醒您"
-          body: "您於" + get_time_diff(get_request.result.last_seen_at) + " 看的新聞「" + get_request.result.title + "」 被人回報有錯誤：" + report.report_title
+          method: \add_notification
+          title: \新聞小幫手提醒您
+          body: "您於 #{get_time_diff(get_request.result.last_seen_at)} 看的新聞「#{get_request.result.title}」 被人回報有錯誤：#{report.report_title}"
           link: report.report_link
         }, (response) ->
-
+        */
 
 
   get_recent_report = (cb) ->
     get_newshelper_db (opened_db) ->
-      transaction = opened_db.transaction("report", "readonly")
-      objectStore = transaction.objectStore("report")
-      index = objectStore.index("updated_at")
-      request = index.openCursor(null, "prev")
+      transaction = opened_db.transaction \report, \readonly
+      objectStore = transaction.objectStore \report
+      index = objectStore.index \updated_at
+      request = index.openCursor null, \prev
       request.onsuccess = ->
         if request.result
           cb request.result.value
@@ -135,8 +136,8 @@ let $ = jQuery
           url: url
           onload: (xhr) ->
             ret = JSON.parse xhr.responseText
-            transaction = opened_db.transaction("report", "readwrite")
-            objectStore = transaction.objectStore("report")
+            transaction = opened_db.transaction \report, \readwrite
+            objectStore = transaction.objectStore \report
             if ret.data
               i = 0
 
@@ -154,8 +155,8 @@ let $ = jQuery
   log_browsed_link = (link, title) ->
     return  unless link
     get_newshelper_db (opened_db) ->
-      transaction = opened_db.transaction("read_news", "readwrite")
-      objectStore = transaction.objectStore("read_news")
+      transaction = opened_db.transaction \read_news, \readwrite
+      objectStore = transaction.objectStore \read_news
       try
         request = objectStore.add(
           title: title
@@ -167,10 +168,10 @@ let $ = jQuery
 
       # link 重覆
       request.onerror = ->
-        transaction = opened_db.transaction("read_news", "readwrite")
-        objectStore = transaction.objectStore("read_news")
-        index = objectStore.index("link")
-        get_request = index.get(link)
+        transaction = opened_db.transaction \read_news, \readwrite
+        objectStore = transaction.objectStore \read_news
+        index = objectStore.index \link
+        get_request = index.get link
         get_request.onsuccess = ->
 
           # update last_seen_at
@@ -185,9 +186,9 @@ let $ = jQuery
   check_report = (title, url, cb) ->
     return  unless url
     get_newshelper_db (opened_db) ->
-      transaction = opened_db.transaction("report", "readonly")
-      objectStore = transaction.objectStore("report")
-      index = objectStore.index("news_link")
+      transaction = opened_db.transaction \report, \readonly
+      objectStore = transaction.objectStore \report
+      index = objectStore.index \news_link
       get_request = index.get(url)
       get_request.onsuccess = ->
 
@@ -270,28 +271,27 @@ let $ = jQuery
 
 
       # post page (single post)
-      $(baseNode).find("._6kv").each (idx, userContent) ->
+      $ baseNode .find \._6kv .not \newshelper-checked .each (idx, userContent) ->
         userContent = $(userContent)
-        unless userContent.hasClass("newshelper-checked")
-          titleText = userContent.find(".mbs").text()
-          linkHref = userContent.find("a").attr("href")
-          censorFacebookNode userContent, titleText, linkHref
+        titleText = userContent .find \.mbs .text!
+        linkHref = userContent .find \a .attr \href
+        censorFacebookNode userContent, titleText, linkHref
 
 
   registerObserver = ->
     MutationObserver = window.MutationObserver or window.WebKitMutationObserver
     mutationObserverConfig =
-      target: document.getElementsByTagName("body")[0]
+      target: document.getElementsByTagName(\body)[0]
       config:
         attributes: true
         childList: true
         characterData: true
 
-    throttle = ->
-      timer_
+    throttle = do ->
+      var timer_
       (fn, wait) ->
         if timer_ then clearTimeout timer_
-        timer_ = setTimeout fn, wait
+        timer_ := setTimeout fn, wait
 
     mutationObserver = new MutationObserver (mutations) ->
       # So far, the value of mutation.target is always document.body.

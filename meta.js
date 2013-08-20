@@ -9,6 +9,6 @@
 // @match     http://www.facebook.com/*
 // @run-at         document-end
 // @require        http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.9.1.min.js
-// @version     1.1
+// @version     1.0.2
 // ==/UserScript==
 
