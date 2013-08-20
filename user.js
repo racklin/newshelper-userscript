@@ -7,7 +7,7 @@
 // @include     http://www.facebook.com/*
 // @run-at         document-end
 // @require        http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.9.1.min.js
-// @version     1.0
+// @version     1.1
 // ==/UserScript==
 
 
@@ -285,7 +285,7 @@
       }
     };
     registerObserver = function(){
-      var MutationObserver, mutationObserverConfig, mutationObserver;
+      var MutationObserver, mutationObserverConfig, throttle, mutationObserver;
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       mutationObserverConfig = {
         target: document.getElementsByTagName("body")[0],
@@ -295,10 +295,20 @@
           characterData: true
         }
       };
+      throttle = function(){
+        timer_;
+        return function(fn, wait){
+          var timer_;
+          if (timer_) {
+            clearTimeout(timer_);
+          }
+          return timer_ = setTimeout(fn, wait);
+        };
+      };
       mutationObserver = new MutationObserver(function(mutations){
-        return mutations.forEach(function(mutation){
-          return censorFacebook(mutation.target);
-        });
+        return throttle(function(){
+          return censorFacebook(document.body);
+        }, 1000);
       });
       return mutationObserver.observe(mutationObserverConfig.target, mutationObserverConfig.config);
     };

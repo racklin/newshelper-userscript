@@ -287,11 +287,19 @@ let $ = jQuery
         childList: true
         characterData: true
 
-    mutationObserver = new MutationObserver((mutations) ->
-      mutations.forEach (mutation) ->
-        censorFacebook mutation.target
+    throttle = ->
+      timer_
+      (fn, wait) ->
+        if timer_ then clearTimeout timer_
+        timer_ = setTimeout fn, wait
 
-    )
+    mutationObserver = new MutationObserver (mutations) ->
+      # So far, the value of mutation.target is always document.body.
+      # Unless we want to do more fine-granted control, it is ok to pass document.body for now.
+      throttle ->
+        censorFacebook document.body
+      , 1000
+
     mutationObserver.observe mutationObserverConfig.target, mutationObserverConfig.config
 
   buildActionBar = (options) ->
